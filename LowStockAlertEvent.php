@@ -5,7 +5,6 @@ use Symfony\Component\DomCrawler\Crawler;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
-use Eccube\Entity\Product;
 class LowStockAlertEvent
 {
 
@@ -47,9 +46,9 @@ class LowStockAlertEvent
         $crawler = new Crawler($response->getContent());
         $html = $this->getHtml($crawler);
 
-        $part = '残り在庫数 :  ' . $plQuantity;
-        if($stock >0 && $stock < $plQuantity)
-            $part .=  '<span style="color:red;"> 残りあとわずか！</style>';
+        $part = '<span id="low_stock">残り在庫数 :  ' . $stock;
+        if($stock > 0 && $stock < $plQuantity)
+            $part .=  '<span style="color:red;" id="low_stock_alert"> 残りあとわずか！</span></span>';
         try {
             $oldHtml = $crawler->filter('#detail_cart_box__cart_quantity')->last()->html();
             $newHtml = $oldHtml . $part; // 変更箇所
