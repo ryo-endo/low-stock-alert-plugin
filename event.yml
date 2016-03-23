@@ -1,2 +1,2 @@
-front.product.detail.complete:
-  - [onProductDetailComplete, NORMAL]
+eccube.event.render.product_detail.before:
+  - [onProductDetailBefore, NORMAL]

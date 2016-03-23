@@ -2,11 +2,10 @@
 namespace Plugin\LowStockAlert;
 
 use Symfony\Component\DomCrawler\Crawler;
-use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\FilterResponseEvent;
-use Eccube\Event\EventArgs;
+use Eccube\Entity\Product;
 class LowStockAlertEvent
 {
 
@@ -18,7 +17,7 @@ class LowStockAlertEvent
         $this->app = $app;
     }
 
-    public function onProductDetailComplete(EventArgs $event)
+    public function onProductDetailBefore(FilterResponseEvent $event)
     {
         try{
             $request = $event->getRequest();
@@ -26,7 +25,6 @@ class LowStockAlertEvent
             $html = $this->getHtmlLowStockAlert($request, $response);
             $response->setContent($html);
             $event->setResponse($response);
-
         }catch(\Exception $e){
             throw  $e;
         }
@@ -41,21 +39,21 @@ class LowStockAlertEvent
      */
     private function getHtmlLowStockAlert(Request $request, Response $response)
     {
-
-        $LowStockAlert = $this->app['eccube.plugin.repository.LowStockAlert']->find(1);
-        $dbQuantity = $LowStockAlert->getNum();
-        $formQuantity = $_REQUEST['quantity'];
+        $LowStockAlert = $this->app['eccube.plugin.repository.lowstockalert']->find(1);
+        $plQuantity = $LowStockAlert->getNum();
+        $product_id =  $request->get('id');
+        $Product= $this->app['eccube.repository.product']->get($product_id);
+        $stock = $Product->getStockMax();
         $crawler = new Crawler($response->getContent());
         $html = $this->getHtml($crawler);
-       if($formQuantity > $dbQuantity){
-           $part = '残り在庫数 ; ' . $dbQuantity . '残りあとわずか';
-       }
 
-
+        $part = '残り在庫数 :  ' . $plQuantity;
+        if($stock >0 && $stock < $plQuantity)
+            $part .=  '<span style="color:red;"> 残りあとわずか！</style>';
         try {
-//            $oldHtml = $crawler->filter('#confirm_main')->last()->html();
-//            $newHtml = $oldHtml . $part; // 変更箇所
-//            $html = str_replace($oldHtml, $newHtml, $html);
+            $oldHtml = $crawler->filter('#detail_cart_box__cart_quantity')->last()->html();
+            $newHtml = $oldHtml . $part; // 変更箇所
+            $html = str_replace($oldHtml, $newHtml, $html);
 
         } catch (\InvalidArgumentException $e) {
         }
