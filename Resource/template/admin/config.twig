@@ -1,0 +1,28 @@
+{% extends 'default_frame.twig' %}
+
+{% block title %}残り在庫数表示設定画面{% endblock %}
+{% block sub_title %}{% endblock %}
+
+{% form_theme form 'Form/bootstrap_3_horizontal_layout.html.twig' %}
+
+{% block main %}
+    <div class="row">
+        <div class="col-md-6 col-md-offset-3">
+            <form class="form-horizontal" method="post" action="{{ url('plugin_LowStockAlert_config') }}">
+                {{ form_widget(form._token) }}
+                <div class="form-group {% if form.num.vars.errors|length %} has-error {% endif %}">
+                    <label class="col-sm-4 control-label">Num <span class="text-danger">*</span></label>
+                    <div class="col-sm-8">
+                        {{ form_widget(form.num) }}
+                        {{ form_errors(form.num) }}
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-3 col-sm-6">
+                        <button type="submit" class="btn btn-primary btn-lg btn-block">登録</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock main %}

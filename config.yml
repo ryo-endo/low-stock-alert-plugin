@@ -1,0 +1,8 @@
+name: 商品制限
+code: LowStockAlert
+version: 1.0.0
+event: LowStockAlertEvent
+service:
+  - LowStockAlertServiceProvider
+orm.path:
+  - /Resource/doctrine

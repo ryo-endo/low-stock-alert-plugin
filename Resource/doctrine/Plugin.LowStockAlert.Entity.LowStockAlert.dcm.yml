@@ -1,0 +1,16 @@
+Plugin\LowStockAlert\Entity\LowStockAlert:
+    type: entity
+    table: plg_product_limit
+    repositoryClass: Plugin\LowStockAlert\Repository\LowStockAlertRepository
+    id:
+        id:
+            type: integer
+            nullable: false
+            unsigned: false
+            id: true
+            column: product_limit_id
+    fields:
+        num:
+            type: integer
+            nullable: true
+    lifecycleCallbacks: {  }
