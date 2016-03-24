@@ -45,10 +45,13 @@ class LowStockAlertEvent
         $stock = $Product->getStockMax();
         $crawler = new Crawler($response->getContent());
         $html = $this->getHtml($crawler);
+        //stock limit
+        if($stock > 0){
+            $part = '<span id="low_stock">残り在庫数 :  ' . $stock;
+            if($stock < $plQuantity)
+                $part .=  '<span style="color:red;" id="low_stock_alert"> 残りあとわずか！</span></span>';
+        }
 
-        $part = '<span id="low_stock">残り在庫数 :  ' . $stock;
-        if($stock > 0 && $stock < $plQuantity)
-            $part .=  '<span style="color:red;" id="low_stock_alert"> 残りあとわずか！</span></span>';
         try {
             $oldHtml = $crawler->filter('#detail_cart_box__cart_quantity')->last()->html();
             $newHtml = $oldHtml . $part; // 変更箇所
