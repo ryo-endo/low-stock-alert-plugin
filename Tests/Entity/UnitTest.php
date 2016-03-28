@@ -27,33 +27,23 @@ class UnitTest extends AbstractAdminWebTestCase
         $this->client->request(
             'POST',
             $this->app->path('plugin_LowStockAlert_config'),
-            array('lowstockalert_config' => $this->createFormData())
+            array('lowstockalert_config' => $this->createFormData(30))
         );
         $LowStockAlert = $this->app['eccube.plugin.repository.lowstockalert']->find(1);
         $quantity = $LowStockAlert->getNum();
-        $this->expected = $quantity;
-        $this->actual = $this->createFormData()['num'];
+        $this->expected = $this->createFormData(30)['num'];
+        $this->actual = $quantity;
         $this->verify();
     }
 
-    /**
-     * POST FORM DATA
-     */
-    protected function createFormData()
-    {
-        $form = array(
-            'num' => 300,
-            '_token' => 'dummy'
-        );
-        return $form;
-    }
+
 
     /**
      * 在庫数が閾値を下回ったときに、「残りあとわずか！」が表示されること
      */
     public function test_display_alarm()
     {
-        $crawler = $this->client->request('GET', $this->app->url('product_detail', array('id' => '2')));
+        $crawler = $this->getProductDetailCrawler(20, 40);
         $this->expected = ' 残りあとわずか！';
         $this->actual = $crawler->filter('#low_stock_alert')->text();
         $this->verify();
@@ -65,7 +55,7 @@ class UnitTest extends AbstractAdminWebTestCase
     public function test_not_display_alarm()
     {
         try{
-            $crawler = $this->client->request('GET', $this->app->url('product_detail', array('id' => '1')));
+            $crawler = $this->getProductDetailCrawler(50, 40);
             //Exception catch(empty node exception)
             $crawler->filter('#low_stock_alert')->text();
             $this->assertTrue(false);
@@ -74,5 +64,82 @@ class UnitTest extends AbstractAdminWebTestCase
         }
     }
 
+
+    /**
+     * Get product detail crawler
+     */
+    public function getProductDetailCrawler($quantity, $lowStockNum){
+        //get product test id
+        $id = $this->createProduct()->getId();
+        $formData = $this->createProductFormData($quantity);
+        $this->client->request(
+            'POST',
+            $this->app->url('admin_product_product_edit', array('id' => $id)),
+            array('admin_product' => $formData)
+        );
+
+
+        $crawler = $this->client->request('GET', $this->app->url('product_detail', array('id' => $id)));
+        return $crawler;
+    }
+
+    /**
+     * Change low stock quantity
+     */
+    public function change_stock_alert($num){
+        $this->client->request(
+            'POST',
+            $this->app->path('plugin_LowStockAlert_config'),
+            array('lowstockalert_config' => $this->createFormData($num))
+        );
+    }
+
+    /**
+     * Create new product data
+     */
+    public function createProductFormData($stock)
+    {
+        $faker = $this->getFaker();
+        $form = array(
+            'class' => array(
+                'product_type' => 1,
+                'price01' => $faker->randomNumber(5),
+                'price02' => $faker->randomNumber(5),
+                'stock' => $stock,
+                'stock_unlimited' => 0,
+                'code' => $faker->word,
+                'sale_limit' => null,
+                'delivery_date' => ''
+            ),
+            'name' => $faker->word,
+            'product_image' => null,
+            'description_detail' => $faker->text,
+            'description_list' => $faker->paragraph,
+            'Category' => null,
+            'tag' => $faker->word,
+            'search_word' => $faker->word,
+            'free_area' => $faker->text,
+            'Status' => 1,
+            'note' => $faker->text,
+            'tags' => null,
+            'images' => null,
+            'add_images' => null,
+            'delete_images' => null,
+            '_token' => 'dummy',
+        );
+        return $form;
+    }
+
+    /**
+     * Low stock alert data
+     */
+    protected function createFormData($num)
+    {
+        $form = array(
+            'num' => $num,
+            '_token' => 'dummy'
+        );
+        return $form;
+    }
 
 }
