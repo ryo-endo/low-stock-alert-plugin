@@ -45,6 +45,7 @@ class LowStockAlertEvent
         $stock = $Product->getStockMax();
         $crawler = new Crawler($response->getContent());
         $html = $this->getHtml($crawler);
+        $part = '';
         //stock limit
         if($stock > 0){
             $part = '<span id="low_stock">残り在庫数 :  ' . $stock;
