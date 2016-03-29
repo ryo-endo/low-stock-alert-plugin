@@ -43,19 +43,37 @@ class UnitTest extends AbstractAdminWebTestCase
      */
     public function test_display_alarm()
     {
-        $crawler = $this->getProductDetailCrawler(20, 40);
+        //stock limited
+        $crawler = $this->getProductDetailCrawler(20, 40, 0);
         $this->expected = ' 残りあとわずか！';
         $this->actual = $crawler->filter('#low_stock_alert')->text();
         $this->verify();
     }
 
     /**
-     * 在庫無制限＝ONの商品の場合は、「残りあとわずか！」が表示されないこと
+     * 在庫数が閾値よりも多いときには、「残りあとわずか！」が表示されないこと
      */
     public function test_not_display_alarm()
     {
         try{
-            $crawler = $this->getProductDetailCrawler(50, 40);
+            //stock limited
+            $crawler = $this->getProductDetailCrawler(50, 40, 0);
+            //Exception catch(empty node exception)
+            $crawler->filter('#low_stock_alert')->text();
+            $this->assertTrue(false);
+        }catch (\InvalidArgumentException $e){
+            $this->assertTrue(true);
+        }
+    }
+
+    /**
+     * 在庫無制限＝ONの商品の場合は、「残りあとわずか！」が表示されないこと
+     */
+    public function test_not_display_alarm_stock_unlimited()
+    {
+        try{
+            //stock unlimited
+            $crawler = $this->getProductDetailCrawler(0, 40, 1);
             //Exception catch(empty node exception)
             $crawler->filter('#low_stock_alert')->text();
             $this->assertTrue(false);
@@ -68,17 +86,16 @@ class UnitTest extends AbstractAdminWebTestCase
     /**
      * Get product detail crawler
      */
-    public function getProductDetailCrawler($quantity, $lowStockNum){
+    public function getProductDetailCrawler($quantity, $lowStockNum, $stock_unlimited){
         //get product test id
         $id = $this->createProduct()->getId();
-        $formData = $this->createProductFormData($quantity);
+        $formData = $this->createProductFormData($quantity, $stock_unlimited);
         $this->client->request(
             'POST',
             $this->app->url('admin_product_product_edit', array('id' => $id)),
             array('admin_product' => $formData)
         );
-
-
+        $this->change_stock_alert($lowStockNum);
         $crawler = $this->client->request('GET', $this->app->url('product_detail', array('id' => $id)));
         return $crawler;
     }
@@ -97,7 +114,7 @@ class UnitTest extends AbstractAdminWebTestCase
     /**
      * Create new product data
      */
-    public function createProductFormData($stock)
+    public function createProductFormData($stock, $stock_unlimited)
     {
         $faker = $this->getFaker();
         $form = array(
@@ -106,7 +123,7 @@ class UnitTest extends AbstractAdminWebTestCase
                 'price01' => $faker->randomNumber(5),
                 'price02' => $faker->randomNumber(5),
                 'stock' => $stock,
-                'stock_unlimited' => 0,
+                'stock_unlimited' => $stock_unlimited,
                 'code' => $faker->word,
                 'sale_limit' => null,
                 'delivery_date' => ''
