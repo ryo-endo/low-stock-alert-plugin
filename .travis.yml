@@ -7,7 +7,7 @@ cache:
     - $HOME/.composer/cache
 
 php:
-  - 5.3
+#  - 5.3
 #  - 5.4
 #  - 5.5
   - 5.6
@@ -46,6 +46,8 @@ before_script:
   - sh eccube_install.sh ${DB} none
   # install plugin
   - php app/console plugin:develop install --path=${HOME}/${PLUGIN_CODE}.tar.gz
+  # enable plugin
+  - php app/console plugin:develop enable --code=${PLUGIN_CODE}
 
 script:
   # exec phpunit on ec-cube
